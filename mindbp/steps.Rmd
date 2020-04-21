@@ -1,0 +1,107 @@
+---
+title: "STEPS 的组成"
+output: html_document
+---
+
+# 赋值
+## ASSIGN
+### 值或表达式
+### 数据字典的值
+### 状态字典的值
+### 任意的项目值
+### xml 的值
+
+# 控制
+## AUTOENV
+### 直接调用 Auto controls 的 6 个控制项
+## SETCONTROL
+### 控制单个变量
+### 利用 LOOP 控制多个变量
+## TABLE
+### 作为循环的控制项
+
+# 记录
+## LOG
+### 打开数据文件
+### 记录remark
+### 记录数据及匹配的选择
+### 关闭数据文件
+
+# 匹配
+## LOG
+### 选择匹配的方式
+## WAIT
+### early match 进行匹配
+
+# 循环或条件判断
+## IF, ELSE IF, ELSE
+### 条件判断后执行相关命令
+## LOOP
+### 按次数循环
+### 按持续时间循环
+### 按列表循环
+### 按文件的行循环
+## WHILE
+### 条件判断为 True 时执行相关命令
+
+# 容器
+## GROUP
+### steps 的容器，可设定是否执行
+
+# 执行或调用
+## RUN
+### 运行另一个 BP
+## EXEC
+### 在 source 输入框内执行 exec()
+#### local 变量在程序执行时可获得
+#### global 变量在整个程序中均可获得
+
+# 退出
+## RETRURN
+### 退出 DEIFINE 或主程序
+## BREAK
+### 退出 LOOP 或 WHILE
+
+# 打印或显示
+## SHOW
+### 将变量显示在日志
+## PROPERTIES
+### 决定是否显示运行日志
+
+
+# 调用或定义
+## DEFINE
+### 本质为定义函数
+## CALL
+### 运行定义的函数
+
+# 等待
+## WAIT
+### Duration 等待一段时间
+### Stabiltiy 等待稳定
+#### 最大最小等待时间
+#### Cr 或 Hs 稳定
+### Until 等待到某个日期的特定时间点
+### Event 等待某一事件为 True
+
+## PROPERTIES
+### 程序的暂停
+
+# 交互
+## DIALOG
+### Grid items 输入变量名或值
+#### check box 适合 True 或 False变量
+#### Dropdown list 从下拉列表选择变量
+#### Edit box 适合字符或值
+#### Radio box 适合小范围的选择
+#### Text 不可编辑的字符
+#### Table 与 Text summary
+##### Table 可编辑对话框
+##### Text summary 不可编辑对话框
+
+## _dlg variables 避免两个 dialog 冲突
+### ASSIGN 的 Dialog interface
+### TABLE 的 Dialog interface
+
+
+

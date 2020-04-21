@@ -1,0 +1,31 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+# 循环或条件判断
+## IF, ELSE IF, ELSE
+### 条件判断后执行相关命令
+## LOOP
+### 按次数循环
+### 按持续时间循环
+### 按列表循环
+### 按文件的行循环
+## WHILE
+### 条件判断为 True 时执行相关命令
+
+# 子程序（函数）
+## DEFINE
+### 定义一个子程序（函数）
+## CALL
+### 调用子程序（函数）
+
+# 容器
+## GROUP
+### steps 的容器，可设定是否执行
+
+# 退出
+## RETRURN
+### 退出 DEIFINE 或主程序
+## BREAK
+### 退出 LOOP 或 WHILE

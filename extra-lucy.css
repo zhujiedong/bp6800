@@ -1,0 +1,193 @@
+/* This is a self-defined css, created by Peng Zhao <pzhao@pzhao.net>. */
+/* Anyone can re-use or modify this file for free. */
+/* Please leave a trace here if you modify it. */
+/* 2018-12-02 Peng Zhao: created. */
+/* 2018-12-04 Peng Zhao: uploaded and shared. */
+/* 2020-2-4 zhujiedong add colors */
+
+.red { color: #FF0000 }
+.green { color: #7FFF00 }
+.gold { color: #FFD700 }
+.blue {color: blue}
+.silver {color: silver}
+.purple {color: #8b008b}
+.yellow {color: yellow}
+.orange {color: orange}
+
+.large { font-size: 140% }
+.medium { font-size: 110% }
+.small { font-size: 70% }
+
+<!--  progress bar instead of slide numbers
+
+.remark-slide-number {
+  position: inherit;
+}
+
+ -->
+ 
+.remark-slide-number .progress-bar-container {
+  position: absolute;
+  bottom: 0;
+  height: 4px;
+  display: block;
+  left: 0;
+  right: 0;
+}
+
+.remark-slide-number .progress-bar {
+  height: 100%;
+  background-color: red;
+}
+
+
+.column:first-of-type {float:left}
+.column:last-of-type {float:right}
+
+.split-40 .column:first-of-type {width: 40%}
+.split-40 .column:last-of-type {width: 60%}
+
+.float_center {
+  float: right;
+  position: relative;
+  left: -50%; /* or right 50% */
+  text-align: left;
+}
+.float_center > .child {
+  position: relative;
+  left: 50%;
+}
+
+
+.col3 {
+    -webkit-column-count: 3; /* Chrome, Safari, Opera */
+    -moz-column-count: 3; /* Firefox */
+    column-count: 3;
+}
+
+h2 {
+    -webkit-column-span: all; /* Chrome, Safari, Opera */
+    column-span: all;
+}
+
+.rotate {
+
+/* Safari */
+-webkit-transform: rotate(-90deg);
+
+/* Firefox */
+-moz-transform: rotate(-90deg);
+
+/* IE */
+-ms-transform: rotate(-90deg);
+
+/* Opera */
+-o-transform: rotate(-90deg);
+
+/* Internet Explorer */
+filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+
+}
+
+
+.title-slide h1 {
+  color: #F7F8FA;
+}
+.title-slide h2, .title-slide h3 {
+  color: #e7e8e2; 
+  line-height: 1.5em;
+}
+
+
+
+/* lucy.css*/
+
+.remark-slide-content {
+  background-color: #000;
+  color: #fff;
+}
+
+strong {
+  color: #92d050;
+}
+
+h2, h3 {
+  font-weight: normal;
+  color: #92d050;
+}
+
+.inverse {
+  background-color: #add9f1;
+  text-shadow: 0 0 0;
+}
+
+.inverse, .inverse h1, .inverse h2, .inverse h3, .inverse a, inverse a > code {
+  color: #000;
+}
+
+.inverse h1 {
+  font-size: 100px;
+}
+
+.title-slide {
+  background-color: #000;
+  color: #fff;
+}
+
+.title-slide h1, .title-slide h2 {
+  color: #fff;
+}
+
+.title-slide h3 {
+  color: #92d050;
+}
+
+a, a > code {
+  color: #add9f1;
+}
+
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    height: 20px;
+    width: 100%;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-size: 10px;
+}
+
+li {
+ font-size: 40px;
+  margin: 18px 0;
+}
+
+ol {
+  max-width: 350px;
+  counter-reset: my-counter;
+  list-style: none;
+  padding-left: 40px;
+  font-size: 40px;
+}
+ol li {
+  counter-increment: my-counter;
+  position: relative;
+  margin: 20px 0;
+}
+ol li::before {
+  content: counter(my-counter);
+  color: #fff;
+  font-size: 40px;
+  font-weight: bold;
+  position: absolute;
+  left: -60px;
+  line-height: 50px;
+  width: 50px;
+  height: 50px;
+  top: 0;
+  background: #92d050;
+  border-radius: 50%;
+  text-align: center;
+}
+
