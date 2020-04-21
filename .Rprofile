@@ -1,4 +1,4 @@
 library(knitr)
 library(pagedown)
 
-opts_chunk$set(echo=FALSE)
+knitr::opts_chunk(echo=FALSE)
