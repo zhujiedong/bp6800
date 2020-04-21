@@ -4,5 +4,5 @@
 
 ## BP 的使用
 
-[BP 的使用](/bp6800/bp-sildes.html)
+[BP 的使用](/bp-sildes.html)
 
