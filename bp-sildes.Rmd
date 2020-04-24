@@ -187,44 +187,109 @@ class: animated, fadeIn, center, middle, inverse
 class: animated, fadeIn
 # 示例1： 改变环境控制和记录时间的测量
 
-.tomato[以下时间的设置仅为演示所需，可任意更改]
+### .tomato[以下时间的设置仅为演示所需，可任意更改]
 
-1. 设置 $CO_2R$ 的值为 0，记录 2 min，记录间隔  1 min。
+### 1. 设置 $CO_2R$ 的值为 0，记录 2 min，记录间隔  1 min。
 
-2. 设置 $CO_2R$ 的值为 400，记录 1 min，记录间隔  30 s。
+### 2. 设置 $CO_2R$ 的值为 400，记录 1 min，记录间隔  30 s。
 
-3. 设置 $CO_2R$ 的值为 0，记录 1 min，记录间隔  30 s。
+### 3. 设置 $CO_2R$ 的值为 0，记录 1 min，记录间隔  30 s。
 
 ---
 class: animated, fadeIn
-# 方法1
+# 方法 1
 
-1. 设置 $CO_2R$ 浓度
-2. 根据需要是否设置等待浓度稳定的时间
-3. 利用 LOOP 的循环持续时间功能来设置记录的时间和间隔
+### 1. 设置 $CO_2R$ 浓度
+### 2. 根据需要是否设置等待浓度稳定的时间
+### 3. 利用 LOOP 的循环持续时间功能来设置记录的时间和间隔
 
-最后将上述步骤重复 n 次，来完成控制。
+### 最后将上述步骤重复 n 次，来完成控制。
 
 ---
 
 class: animated, fadeIn
-# 方法2
+# 方法 2
 
-1. 设置 $CO_2R$ 浓度
-2. 根据需要是否设置等待浓度稳定的时间
-3. 调用 DEFINEs 或 GROUPs 的 autolog 来自动记录一定时间的数据
+### 1. 设置 $CO_2R$ 浓度
+### 2. 根据需要是否设置等待浓度稳定的时间
+### 3. 调用 DEFINEs 的 autolog 来自动记录一定时间的数据
 
-最后将上述步骤重复 n 次，来完成控制。
+### 最后将上述步骤重复 n 次，来完成控制。
 
-注：同方法1没有本质的区别，但胜在减少了编辑的时间或者可以控制某一步不进行。
+### 注：同方法1没有本质的区别，但胜在减少了编辑的时间或者可以控制某一步不进行。
+---
+class: animated, fadeIn
+# 方法 1 的关键 STEP：
+```python
+PROPERTIES(verbose="True",pause="False"),
+LOG(open="\"/home/licor/logs/zjd/test\"",app=False),
+SETCONTROL("CO2_r","0","float"),
+LOOP(dur="1",
+	units="Minutes",
+	steps=()
+		WAIT(dur="10",units="Seconds"),
+		LOG(),
+	)
+),
+LOG(close=0),
+```
+---
+class: animated, fadeIn
+# STEPs 的解释
+- 在日志显示信息
+  ```python
+  PROPERTIES(verbose="True",pause="False")
+  ```
 
+- 在 logs 文件夹下的 zjd 文件夹打开一个 test 文件，不追加
+  ```python
+LOG(open="\"/home/licor/logs/zjd/test\"",app=False)
+  ```
+  
+- 控制二氧化碳浓度
+  ```python
+SETCONTROL("CO2_r","0","float")
+  ```
+- 开始一个循环，时间持续 1 min 中，每 10 s 记录一个数据
+  ```python
+LOOP(dur="1",	units="Minutes",	steps=() WAIT(dur="10",units="Seconds"),LOG(),
+ 	)
+ ```
+-  LOG 有关闭数据文件的功能
 
+  ```python
+LOG(close=0)
+  ```
+
+---
+class: animated, fadeIn
+# 方法 2 STEPs 的解释
+```python
+PROPERTIES(verbose="True",pause="False"),
+LOG(open="\"/home/licor/logs/zjd/test\"",app=False),
+SETCONTROL("CO2_r","0","float"),
+CALL("AutoLog",
+	['0.5', '10']),
+SETCONTROL("CO2_r","300","float"),
+CALL("AutoLog",
+	['0.5', '10']),
+SETCONTROL("CO2_r","300","float"),
+CALL("AutoLog",
+	['0.5', '10']),
+LOG(close=0),
+```
+
+- 该方法直接利用 DEFINEs 库的 AutoLog 来记录数据，避免了手动插入 LOOP。
+
+- 在 DEFINEs 库中的文件可以直接调用，无需放在一个 py 文件内
+
+- 调用的方法是 CALL
 ---
 class: animated, fadeIn, center, middle, inverse
 
 # .large[示例 1 的演示]
-
 ---
+
 class: animated, fadeIn
 # 示例2
 
@@ -293,7 +358,7 @@ class: animated, fadeIn
 
 - `lambda` Python 的匿名函数。
 
-- `ASSIGN`  将表达式赋给变量。`ASSIGN('logint', exp ="lambda x:30/1+50*math.exp(-0.03*x)")`，执行时会转换为： `logint = lambda x:30/1+50*math.exp(-0.03*x)`，即记录时间间隔的变量为 logint。
+- `ASSIGN`  将表达式赋给变量。`ASSIGN('logint', exp ="lambda x:30/(1+50*math.exp(-0.03*x))")`，执行时会转换为： `logint = lambda x:30/(1+50*math.exp(-0.03*x))`，即记录时间间隔的变量为 logint。
 
 - `math.exp` Python `math` 库中的自然常数。
 
@@ -358,7 +423,7 @@ class: animated, fadeIn
  ```python
  open('/home/licor/logs/light_series.txt','w')"
  ```
-- 执行一个 python 语句，将其 Time 和 Light 存储到打开的文件中
+- 执行一个 python 语句，将其 Time 和 Light 作为表头存储到打开的文件中
  ```python
  EXEC(0,source="print(\"Time,Light\",file=f)")
  ```
@@ -369,12 +434,12 @@ class: animated, fadeIn
  ```
 - 将时间和光强利用 format 格式化为逗号分隔符 
  ```python
-{0},{1}'.format(hhmmss,q)
+'{0},{1}'.format(hhmmss,q)
  ```
 
 ---
 class: animated, fadeIn
-# 关键的 STEPS
+# 关键的 STEPS 及解释
 
 ```python
 LOOP(file="\"/home/licor/logs/light_series.txt\"",
@@ -389,11 +454,6 @@ LOOP(file="\"/home/licor/logs/light_series.txt\"",
 	)
 )
 ```
-
----
-class: animated, fadeIn
-
-# 几个 STEP 的解释
 
 - LOOP 可以直接读取文件
 - delim 指定分隔符
@@ -460,7 +520,6 @@ TABLE("inner_table",
 - 紧随其后的我们需要设置的为我们期望的控制项
 
 - .red[此处应演示添加 dialog 修改数值的方法，待测试，待补充]
-
 
 ---
 class: animated, fadeIn
@@ -546,16 +605,52 @@ include_graphics("./img/cloud.png")
 
 ---
 class: animated, fadeIn
-# 方法1：
+# 推荐方法：
 
-# 待补充，最原始的方式，一一列出所有控制
-可以采取一个浓度变化一次，多列几个文件的形式，方便后面调用
----
-# 方法2：
+- 定义一个 subroutine，用于自动计数和控制光强和 $CO_2$ 浓度。
 
-# 待补充，定义subroutine，一一列出所有控制
+- 使用 Call 反复调用，来修改浓度和光强的变化
+
+- 在开始变化之前的诱导时，利用 WAIT 等待稳定，然后匹配
+
+- 整个测量过程中控温，因为 range match 的存在，无需匹配
 ---
-# 示例5的演示：
+# 关键的 STEP
+```python
+WAIT(min="60",max="60*15",early="False"),
+CALL("var_cr_qin", ['50', '50', '30', '10']),
+CALL("var_cr_qin", ['50', '500', '15', '10']),
+CALL("var_cr_qin", ['100', '50', '30', '10']),
+CALL("var_cr_qin", ['100', '500', '15', '10']),
+DEFINE("var_cr_qin",
+	[['cr', 'Value'], ['qin', 'Value'], ['duration', 'Value'], ['intv', 'Value']],
+	steps=(''])
+		SETCONTROL("Qin","qin","float"),
+		SETCONTROL("CO2_r","cr","float"),
+		LOOP(dur="duration",
+			units="Minutes",
+			steps=()
+				WAIT(dur="intv",units="Seconds"),
+				LOG(),
+			)
+		),
+	)
+)
+```
+---
+class: animated, fadeIn
+
+# 关键步骤解释
+
+### - DEFINE 是定义一个 subroutine，实际上是一个函数，我们此处定义了控光、控二氧化碳、控测量间隔和时长 4 个参数。注意，DEFINE 的位置不影响程序
+
+### - CALL 是调用函数，分别输入不同的上述 4 个参数，做对应的控制测量
+
+### - WAIT 除了等待时间外，还可以用于等待分析器读数稳定
+---
+class: animated, fadeIn, center, middle, inverse
+
+# .large[示例5的演示]
 ---
 class: inverse, center, middle, animated, fadeIn
 
