@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>使用 BP 程序进行特定的光合测量的演示</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="祝介东" />
+    <link rel="stylesheet" href="zh-CN.css" type="text/css" />
+    <link rel="stylesheet" href="extra-rutgers.css" type="text/css" />
+    <link rel="stylesheet" href="animate-min.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# 使用 BP 程序进行特定的光合测量的演示
+## 记录间隔变化的测量
+### 祝介东
+### 北京力高泰科技有限公司 技术部
+### 2020-04-26 修改
+
+---
+
+background-image: url(https://s2.ax1x.com/2020/03/09/8S2l7T.png)
+
+background-size: cover
+
+class: center, middle, animated, fadeIn
+
+# .large[记录间隔变化的测量]
+---
+class: animated, fadeIn
+# 示例2
+
+.medium[如果我们需要记录在光强在突然变化后的叶片的各个参数的响应，我们期望能以变化的时间间隔记录数据：
+
+- 在最初的时间，光合速率剧烈变化，我们希望能以很短的时间间隔记录数据，
+
+- 随着叶片的对环境的适应，光合数据变化减缓，变化需要较长时间的气孔导度等数据也不需要快速记录，这样我们再使用比较长的时间间隔来记录。
+
+**一直以非常高的频率计数不是不行，只是增加了我们后续处理数据的量。**
+
+
+- 控制光强的变化为 1500，50， 1500
+
+- 使用逻辑方程（即著名的 S 型曲线）来控制记录的间隔，初期间隔短，中期时间间隔快速增加，后期几乎不变，记录 15 mins 中。
+
+]
+---
+class: animated, fadeIn
+# 相关背景的解释
+
+
+.pull-left[### 构造函数
+
+&lt;br /&gt;
+&lt;br /&gt;
+
+我们使用典型的逻辑回归方程构造记录间隔的函数：
+
+`$$f(t)=\frac{30}{1+50e^{-0.03t}}$$`
+
+]
+
+.pull-right[
+&lt;img src="./img/logistic.png" width="987" style="display: block; margin: auto 0 auto auto;" /&gt;
+]
+
+---
+class: animated, fadeIn
+# 几个关键的 STEPS 设置
+
+```python
+ASSIGN("logint",
+	exp="lambda x: 30/(1+50*math.exp(-0.03*x))"),
+ASSIGN("test",
+	exp="lambda x: x if x &gt;= 1 else 0"),
+LOOP(list="1500,50,1500",
+	var="x",
+	steps=(
+		SETCONTROL("Qin","x","float"),
+		LOOP(dur="15",
+			units="Minutes",
+			var="t",
+			mininc="test(logint(t))",
+			steps=(
+				LOG(avg="Off",
+					match="Off",
+					flr="0: Nothing"),
+			)
+		),
+	)
+)
+```
+---
+class: animated, fadeIn
+# 几个 STEPS 中的知识点
+
+- `lambda` Python 的匿名函数。
+
+- `ASSIGN`  将表达式赋给变量。`ASSIGN('logint', exp ="lambda x:30/(1+50*math.exp(-0.03*x))")`，执行时会转换为： `logint = lambda x:30/(1+50*math.exp(-0.03*x))`，即记录时间间隔的变量为 logint。
+
+- `math.exp` Python `math` 库中的自然常数。
+
+- `LOOP`
+  - 光强的控制相当于 Python 的 `for` 循环，`for x in [1500, 50, 1500]` 设置 `Qin = x`
+  - 第二个 LOOP 其实也是 `for` 循环，`var `定义的 t 指从循环开始到现在的时间，`mininc` 是这个 LOOP 一个循环最小的等待时间，0 为等待 6800 有新数据记录。利用该参数和下面的写法实现最小等待 1 s 计数。
+  ```python
+ASSIGN("test", exp="lambda x: x if x &gt;= 1 else 0")
+test(logint(t))
+  ```
+  
+- LOG 项为记录数据，这里参数的意思是不取平均值，不匹配，不记录荧光。
+  
+---
+
+class: animated, fadeIn, center, middle, inverse
+
+# .large[示例 2 的演示]
+
+---
+class: inverse, center, middle, animated, fadeIn
+
+# .large[谢谢！]
+
+![](./img/gif-qrcode.gif)&lt;!-- --&gt;
+## 关注公众号后获取更多精彩内容
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightStyle": "ir-black",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

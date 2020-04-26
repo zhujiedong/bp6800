@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>使用 BP 程序进行特定的光合测量的演示</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="祝介东" />
+    <link rel="stylesheet" href="zh-CN.css" type="text/css" />
+    <link rel="stylesheet" href="extra-rutgers.css" type="text/css" />
+    <link rel="stylesheet" href="animate-min.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# 使用 BP 程序进行特定的光合测量的演示
+## 不同 <span class="math inline"><em>C</em><em>O</em><sub>2</sub></span> 浓度下的光响应曲线
+### 祝介东
+### 北京力高泰科技有限公司 技术部
+### 2020-04-26 修改
+
+---
+
+background-image: url(https://s2.ax1x.com/2020/03/09/8S2l7T.png)
+
+background-size: cover
+
+class: center, middle, animated, fadeIn
+
+# 不同 `\(CO_2\)` 浓度下的光响应曲线
+---
+class: animated, fadeIn
+
+# 示例4：不同 `\(CO_2\)` 浓度的光响应曲线
+
+如果我们要做不同 `\(CO_2\)` 浓度下的光响应曲线，有几个问题：
+
+- 能够根据物种定义不同的光强梯度
+
+- 能够根据需要定义不同的  `\(CO_2\)` 的浓度
+
+- 能够根据需要定义不同的最大最小等待时间，例如按照 AutoProgram 的测量，我们整体只能设置一个最大最小等待时间。但对于这个测量，我们要进行多个光响应曲线的测量，而且除了我们开始整个测量外，其他过程都处于无人干预的状态，第一个点我们要在最高光强下等待其稳定才开始测量，而且考虑到 `\(CO_2\)`  在第一个点时也刚刚变化，我们第一个点则需要设置的等待时间较长，第二个点，第三个点反而是因为一直处于饱和光强下， `\(CO_2\)` 也很稳定，等待时间可适当降低。
+
+**也就是说，该实验要一次进行非常多的循环，我们需要最小化测量时的等待时间，使整个测量时间最短，同时还需要保证环境参数剧烈变化时，有足够的等待时间，让叶片处于光合稳定状态。**
+---
+class: animated, fadeIn
+# 方法1： 关键的 STEP
+```python
+TABLE("outer_table",
+	[('CO2_r', [300, 400, 500, 600])]),
+TABLE("inner_table",
+	[('Qin', [1500, 1250, 1000, 750, 500, 250, 100]),
+		('minWait', [300, 60, '', '', '', '', ''], {'format': ['f', 1, 2], 'units': 'secs'}),
+		('maxWait', [500, 120, '', '', '', '', ''], {'format': ['f', 1, 2], 'units': secs'}),
+		]),
+LOOP(list="outer_table",
+	var="outer_index",
+	steps=(
+		LOG(open="\"/home/licor/logs/co2_\"+str(outer_index)",app=False),
+		LOG(rem="'automatic file'"),
+		LOOP(list="inner_table",
+			var="inner_index",
+			steps=(
+				WAIT(min="minWait",max="maxWait",early="False"),
+				LOG(avg="On"),
+			)
+		)
+```
+---
+class: animated, fadeIn
+# 关键 STEP 详解
+```python
+TABLE("outer_table",
+	[('CO2_r', [300, 400, 500, 600])]),
+TABLE("inner_table",
+	[('Qin', [1500, 1250, 1000, 750, 500, 250, 100]),
+		('minWait', [300, 60, '', '', '', '', ''], {'format': ['f', 1, 2], 'units': 'secs'}),
+		('maxWait', [500, 120, '', '', '', '', ''], {'format': ['f', 1, 2], 'units': secs'}),
+		])
+```
+- TABLE 是可以作为 LOOP 的 list 列表来运行的，它的本质是作为一个命名的控制列表，因此可以使用 LOOP 来遍历其中的所有元素，来完成对其中控制项进行循环的控制。
+
+- 第一个变量为 TABLE 的名字，方便后面 LOOP 调用。
+
+- 紧随其后的我们需要设置的为我们期望的控制项
+
+- 可以自定义变量，而并非仅限于 SETCONTROL 中的内容
+
+- 我们可以演示使用一个 DIALOG 来弹出对话框，更改相关的数值
+
+---
+class: animated, fadeIn
+
+# 关键 STEP 详解
+
+```python
+LOG(open="\"/home/licor/logs/co2_\"+str(outer_index)",app=False),
+WAIT(min="minWait",max="maxWait",early="False")
+```
+- 为方便后续数据处理，将记录文件命名为 co2_+浓度的格式，也就是每个 `\(CO_2\)` 浓度单独记录一个在一个数据文件内。
+
+- 利用 WAIT 实现等待稳定后匹配，此处关闭了 early match 功能。
+
+---
+class: animated, fadeIn
+# 方法2： 关键的 STEPs
+
+```python
+EXEC(0,file="/home/licor/resources/lib/list_utility.py"),
+ASSIGN("q",
+	exp="linearList(1500,50,8)"),
+ASSIGN("minWait",
+	exp="60"),
+ASSIGN("firstWait",
+	exp="300"),
+LOOP(list="400,300,200,100",
+	var="co2",
+	steps=(
+		SETCONTROL("CO2_s","co2","float"),
+		LOG(open="\"/home/licor/logs/co2_\"+str(co2)",app=False),
+		LOG(rem="'automatic file'"),
+		LOOP(count="len(q)",
+			var="i",
+			steps=(
+				SETCONTROL("Qin","q[i]","float"),
+				ASSIGN("w",
+					exp="firstWait if i==0 else minWait"),
+				WAIT(min="w",max="2*w",early="False"),
+				LOG(avg="On"),
+			)
+		)
+```
+
+---
+class: animated, fadeIn
+
+# 关键 STEP 详解
+```python
+EXEC(0,file="/home/licor/resources/lib/list_utility.py")
+linearList(1500,50,8)
+```
+-  调用 list_utility 的 linearList 生成光强梯度。如果想自定义梯度，可以直接输入逗号分隔的数值即可。
+
+```python
+LOOP(count="len(q)",
+			var="i",
+			steps=(
+				SETCONTROL("Qin","q[i]","float"),
+				ASSIGN("w",
+					exp="firstWait if i==0 else minWait"),
+				WAIT(min="w",max="2*w",early="False"),
+```
+- 如果是第一个设置的光强梯度，那么等待的最小时间为 firstWait。也就是 300 s，这里是确保第一个环境变化剧烈的点有足够长的等待时间。否则为最小等待时间， 最大等待时间为最小等待时间的 2 倍。
+
+---
+class: animated, fadeIn, center, middle, inverse
+
+# .large[示例 4 的演示]
+
+---
+class: inverse, center, middle, animated, fadeIn
+
+# .large[谢谢！]
+
+![](./img/gif-qrcode.gif)&lt;!-- --&gt;
+## 关注公众号后获取更多精彩内容
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightStyle": "ir-black",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

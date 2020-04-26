@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>使用 BP 程序进行特定的光合测量的演示</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="祝介东" />
+    <link rel="stylesheet" href="zh-CN.css" type="text/css" />
+    <link rel="stylesheet" href="extra-rutgers.css" type="text/css" />
+    <link rel="stylesheet" href="animate-min.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# 使用 BP 程序进行特定的光合测量的演示
+## 时间序列的重现
+### 祝介东
+### 北京力高泰科技有限公司 技术部
+### 2020-04-26 修改
+
+---
+
+background-image: url(https://s2.ax1x.com/2020/03/09/8S2l7T.png)
+
+background-size: cover
+
+class: center, middle, animated, fadeIn
+
+# .large[时间序列的重现]
+---
+class: animated, fadeIn
+# 示例3：时间序列的重现
+
+&lt;br /&gt;
+
+在实际应用中，我们可能需要重现一个时间序列的变化，这十分有用，例如:
+
+我们通过记录一段时间内林下光斑的变化，然后利用 LI-6800 重现这个时间段内的变化，来进行光合参数的测量。这实际上需要两个 BP 来完成：
+
+&lt;br /&gt;
+
+1. 记录一段时间环境的光强变化，并将时间和对应的光强存储到文件。
+
+2. 运行另一个 BP，将上面的数据文件读取后，按照文件的光强记录一段时间的光强变化。
+---
+class: animated, fadeIn
+# 关键的 STEPS
+
+```python
+ASSIGN("f",
+	exp="open('/home/licor/logs/light_series.txt','w')"),
+ASSIGN("q",
+	dd=DataDict('PPFD_out','Meas'),
+	track=True),
+EXEC(0,source="print(\"Time,Light\",file=f)"),
+LOOP(dur="1",
+	units="Hours",
+	mininc="2",
+	steps=(
+		ASSIGN("hhmmss",
+			exp="datetime.now().strftime(\"%H:%M:%S\")"),
+		ASSIGN("line",
+			exp="'{0},{1}'.format(hhmmss,q)"),
+		EXEC(0,source="print(line,file=f)"),
+	)
+),
+EXEC(0,source="f.close()")
+```
+---
+class: animated, fadeIn
+
+# 几个 STEP 的解释
+- 打开（新建）一个名为 light_series.txt 的文件，并对其进行写入操作
+ ```python
+ open('/home/licor/logs/light_series.txt','w')"
+ ```
+- 执行一个 python 语句，将其 Time 和 Light 作为表头存储到打开的文件中
+ ```python
+ EXEC(0,source="print(\"Time,Light\",file=f)")
+ ```
+
+- 利用 `datetime.now` 输出时间，并将其输出格式定义为 ISO 格式
+ ```python
+ "datetime.now().strftime(\"%H:%M:%S\")"
+ ```
+- 将时间和光强利用 format 格式化为逗号分隔符 
+ ```python
+'{0},{1}'.format(hhmmss,q)
+ ```
+
+---
+class: animated, fadeIn
+# 关键的 STEPS 及解释
+
+```python
+LOOP(file="\"/home/licor/logs/light_series.txt\"",
+	parse=True,
+	delim="Comma",
+	skip="1",
+	var="q",
+	mininc="2",
+	steps=(
+		# Set a control: SETCONTROL('target', 'value', 'eval' [,opt_target=''])
+		SETCONTROL("Qin","q[1]","float"),
+	)
+)
+```
+
+- LOOP 可以直接读取文件
+- delim 指定分隔符
+- mininc 每个光强的持续时间是 2 s
+
+---
+class: animated, fadeIn, center, middle, inverse
+
+# .large[示例 3 的演示]
+
+---
+class: inverse, center, middle, animated, fadeIn
+
+# .large[谢谢！]
+
+![](./img/gif-qrcode.gif)&lt;!-- --&gt;
+## 关注公众号后获取更多精彩内容
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightStyle": "ir-black",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
