@@ -16,7 +16,7 @@ class: center, middle, inverse, title-slide
 ## 以实际应用为例
 ### 祝介东
 ### 北京力高泰科技有限公司 技术部
-### 2020-04-24 修改
+### 2020-04-26 修改
 
 ---
 
@@ -60,9 +60,9 @@ BP（Background Program） 指的是一系列步骤的集合，能够在 6800 �
 
 #### .tomato.large.bold[什么是步骤（step）:]
 
-本质上是一个未经执行的字符串中的 Python 表达式（expression），当其被调用时，表达式被 Python 的 `eval()` 或 `exec()` 执行。多数情况下，实际上被执行的是一个步骤的集合，以实现更复杂的目的，这个步骤的集合本质上是 Python 中的列表（list）
+本质上是 Python 中一个未经执行的字符串的表达式（expression），当其被调用时，表达式被 Python 的 `eval()` 或 `exec()` 执行。多数情况下，实际上被执行的是一个 .large.purple.bold[步骤 (STEP)] 的集合，以实现更复杂的目的，这个步骤的集合本质上是 Python 中的列表（list）。
 
-也就是说 Background Program .large.purple.bold[本质上是 Python 程序]，而 LI-6800 就像是是一台安装了 BSD 的电脑，来执行这些 BP。
+也就是说 Background Program .large.purple.bold[本质上是 Python 程序]，而 LI-6800 就像是一台安装了 BSD 的电脑，来执行这些 BP。
 
 ---
 
@@ -72,40 +72,41 @@ class: animated, fadeIn, center, middle, inverse
 ---
 class: animated, fadeIn
 
-# 有益的与 Python 相关的 BP 基础知识
+# 从 Python 的角度理解 BP
 
-- Sequences：Python 对**有序**数据集的总称，有序是指我们可以赋给数据集中每个元素一个数值，可以通过索引（index）来调用单个元素或多个元素，**Python 索引是以 0 为起始，也就是第一个元素应为 [0]**
+.tomato.bold[BP 可以无需 Python 基础使用，但了解相关的背景有助于加深对其理解和使用。]
+- **list:** 列表，Python 中最万能的数据类型，写法是在 ** [] ** 内的，使用逗号分隔的值（values 或 items）。可以通过索引（index）来调用单个元素或多个元素，**Python 索引是以 0 为起始，也就是第一个元素应为 [0]**，它有个最大的特点就是值的类型不必相同,例如：
 
-- list: 列表，Python 中最万能的数据类型，写法是在 ** [] ** 内的，使用逗号分隔的值（values 或 items）。它有个最大的特点就是值的类型不必相同,例如：
-
-```python
+ ```python
 list1 = ["LI-6800", 21, 0.08, "BP"]
-```
+ ```
 
-- STEP：本质上是 list，Python 内并无此名词，是 LICOR 定义的一个由字符组成的列表，因为这个 list 的内容要被 `eval()` 或 `exec()` 执行，所以这些字符的写法要符合 LICOR 定义的相关模块的要求。例如列表中常见的几种赋值 ASSGIN 的写法为：
+- **STEP：**本质上是 list，Python 内并无此名词，是 BP 中 定义的一个由字符组成的列表，因为这个 list 的内容要被 `eval()` 或 `exec()` 执行，所以这些字符的写法要符合 bpdefs 模块的要求。例如列表中常见的几种赋值 ASSGIN 的写法为：
 
-```python
+ ```python
 steps = [ASSIGN("Fs", dd=DataDict('Flow_s','Status')),
 ASSIGN("isOpen", exp="Fs &lt; 10"),
-ASSIGN("tleafok",
-			exp="lambda t: 1 if (t != 0) and (t &gt; -20) and (t &lt; 60) else 0"),
-ASSIGN("numTCs",
-			exp="tleafok(data['Tleaf']) + tleafok(data['Tleaf2'])")
+ASSIGN("tleafok",	exp="lambda t: 1 if (t != 0) and (t &gt; -20) and (t &lt; 60) else 0"),
+ASSIGN("numTCs", exp="tleafok(data['Tleaf']) + tleafok(data['Tleaf2'])")
 ]
-```
+ ```
 ---
 class: animated, fadeIn
 
-# 有益的与 Python 相关的 BP 基础知识
+# 从 Python 的角度理解 BP
 
-- eval: STEP 中的内容是字符串，字符串是无法执行的，需要转为表达式（可以赋给变量的任意的对象），并且 eval 也只能接受单个表达式，并返回表达式的值。
+- **eval:** STEP 中的内容是字符串，字符串是无法执行的，需要转为表达式（可以赋给变量的任意的对象），并且 eval 也只能接受单个表达式，并返回表达式的值。
 
-- exec：与 eval 类似，但不返回表达式的值，并能接受动态创建的语句或程序。
+- **exec：** 与 eval 类似，但不返回表达式的值，并能接受动态创建的语句或程序。在 BP 中，exec 实际由 EXEC 来替代。
 
-在 BP 中，exec 实际由 EXEC 来替代。使用 BP 需要首先明白两点：
+.large.bold.purple[使用 BP 需要首先明白两点：]
 
-1. 运行 BP 并不是运行 .py 文件，而是 .py 文件首先被编译（eval()）以获取 STEPS 列表，然后 BP 使用这些 STEPS 作为数据来运行。
-2. 我们创建的变量是存在于列表中，变量和表达式在这一阶段必须以字符的形式存在。例如上一页中演示的 ASSIGN 第一个参数，实际应为一个变量（该阶段还不是），此时必须加引号将其作为字符存在。也就是说，我们写的代码必须发送到 eval() 或 exec() 两次，第一次是创建 STEP（也就是说最初创建的是普通的 list，被 eval() 或 exec() 处理后变为 STEP），第二次是 STEP 来处理其参数。
+1. 运行 BP 并不是直接运行 .py 文件，而是 .py 文件首先被编译（eval()）以获取 STEPS 列表，**然后 BP 使用这些 STEPS 作为数据来运行**。
+
+2. 我们创建的变量是**存在于列表中**，变量和表达式在这一阶段必须**以字符的形式存在**。例如上一页中演示的 ASSIGN 第一个参数，实际应为一个变量（该阶段还不是），此时必须加引号将其作为字符存在（否则因为环境中无此变量，`eval() `就会报错）。换言之，我们写的代码必须发送到 eval() 或 exec() 两次：、
+  1. 创建 STEP，也就是创建字符组成的 list，被 eval() 或 exec() 处理后变为 STEP 的数据，或者说是转变为表达式或语句的存在。
+  
+  2. BP 使用上面的 STEP 数据来构建 BP，然后作为 python 程序来运行。
 
 
 ???
@@ -130,7 +131,7 @@ class: animated, fadeIn
 
 - AutoProgram 每次只能执行一个，但理论上讲 BP 可以同时执行任何个数。
 
-- BP 能够实现 AutoProgram 不能实现的功能，即可以在规则内定制自己所需要的程序
+- BP 能够实现 AutoProgram 不能实现的功能，即可以在规则内定制自己所需要的程序。
 ---
 
 class: animated, fadeIn, center, middle, inverse
@@ -147,7 +148,7 @@ class: animated, fadeIn
 
 ### 2. STEPS 将被 eval() 或 exec()，生成一个参数化的 list 的过程
 
-### 3. 系统安装的 python （使用 Python 3） 使用 BP 将 STEPS 作为参数的运行过程
+### 3. 系统安装的 python （使用 Python 3） 使用 BP 将 STEPS 作为数据运行的过程
 
 .large.tomato[其中，我们需要做的工作仅仅是 STEPS 的编写过程。因此掌握 STEPS 的各个命令是写好 BP 的前提，我们先了解一下 BP 的命令。]
 ---
