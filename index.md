@@ -19,4 +19,7 @@
 [示例 4 ](/bp-exam-4.html)
 
 ## 模拟多云条件下的可变光测量
-[示例 5 ](/bp-exam-5.html)
+[示例 5 ](/bp-exam-5.html) 
+
+## RACiR 测量
+[示例6](/bp-exam-6.html)

@@ -4,6 +4,9 @@
     <title>使用 BP 程序进行特定的光合测量的演示</title>
     <meta charset="utf-8" />
     <meta name="author" content="祝介东" />
+    <script src="libs/header-attrs-2.4.5/header-attrs.js"></script>
+    <link href="libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+    <script src="libs/anchor-sections-1.0/anchor-sections.js"></script>
     <link rel="stylesheet" href="zh-CN.css" type="text/css" />
     <link rel="stylesheet" href="extra-rutgers.css" type="text/css" />
     <link rel="stylesheet" href="animate-min.css" type="text/css" />
@@ -13,10 +16,10 @@
 class: center, middle, inverse, title-slide
 
 # 使用 BP 程序进行特定的光合测量的演示
-## 改变环境控制和测量时间的测量
+## RACiR 测量
 ### 祝介东
 ### 北京力高泰科技有限公司 技术部
-### 2020-04-28 修改
+### 2020-11-03 修改
 
 ---
 
@@ -26,126 +29,70 @@ background-size: cover
 
 class: center, middle, animated, fadeIn
 
-# .large[改变环境和测量时间的测量]
-
+# .large[RACiR 测量]
 ---
 class: animated, fadeIn
-# 改变环境控制和记录时间的测量
 
-在实际的测量中，我们有时候会改变环境条件，然后进行一段时间的测量，记录数据，若不使用 BP，那么只能手动控制，缺点是手动参数的更改需要时间更长，反复更改容易出错。**而使用 BP，只需要一次设置，确保不出错后则按照我们既定的顺序来执行所有的操作。**我们以下面的程序来演示该类型测量的 BP 的设定方法：
+# 示例6：RACiR 测量
 
-### 1. 设置 `\(CO_2R\)` 的值为 0，记录 2 min，记录间隔  1 min。
+RACiR 测量是 LI-6800 功能上先进性的体现，为 ACi 测量提供了新的研究方向，使用常规方式可以进行 RACiR 测量，但因为要在两个菜单窗口内进行设定，有时不是很方便，但使用 BP 程序，则可以很好的解决这个问题。本例采用下面文章所采用的方法演示：
 
-### 2. 设置 `\(CO_2R\)` 的值为 400，记录 1 min，记录间隔  30 s。
-
-### 3. 设置 `\(CO_2R\)` 的值为 0，记录 1 min，记录间隔  30 s。
-
-.footnote.red[以上时间的设置仅为演示所需，可根据需要任意更改]
----
-class: animated, fadeIn
-# 方法 1
-
-### 1. 设置 `\(CO_2R\)` 浓度
-### 2. 根据需要是否设置等待浓度稳定的时间
-### 3. 利用 LOOP 循的环持续时间功能来设置记录的时间和间隔
-
-### 最后将上述步骤重复 n 次，来完成控制。
+&lt;img src="./img/conifer-racir.png" width="1131" /&gt;
 
 ---
+# 基本流程
 
-class: animated, fadeIn
-# 方法 2
+#### 1. 在 420 ppm 浓度下对叶片进行光诱导约 5 min（野外条件，稳定较快，不能一概而论）。
 
-### 1. 设置 `\(CO_2R\)` 浓度
-### 2. 根据需要是否设置等待浓度稳定的时间
-### 3. 调用 DEFINEs 的 autolog 来自动记录一定时间的数据
+#### 2. 随后运行一个 AUTO CONTROL，使得二氧化碳浓度以 200 ppm/mins 的速度下降至 20 ppm，也就是进行一个 2 mins 的设置。
 
-### 最后将上述步骤重复 n 次，来完成控制。
+#### 3. 再等待 10~15 s(实际上此处可以直接进行，文献中测量时系统版本为 BLUE1.3.17，必须手动设定新的 AUTO CONTROL 才可以进行下一步)，开始真正的 RACiR 测量，使用 20~1520 ppm 的二氧化碳浓度变化，变化速率为 100 ppm/min。
 
-### 注：同方法1没有本质的区别，但胜在减少了编辑的时间或者可以控制某一步不进行。
+.red.large.bold[注：使用 RACiR 测量，必须要控制 `\(CO_2R\)`, 而不同于普通的 ACi 测量，建议控制 `\(CO_2R\)`，但控制 `\(CO_2S\)` 并无问题。]
+
 ---
-class: animated, fadeIn
-# 方法 1 的关键 STEPs：
- ```python
-PROPERTIES(verbose="True",pause="False"),
-LOG(open="\"/home/licor/logs/zjd/test\"",app=False),
-SETCONTROL("CO2_r","0","float"),
-LOOP(dur="1",
+# 关键步骤
+
+``` python
+
+AUTOENV("1",
+	target="CO2_r",
+	range=('start_co2', 'end_co2'),
+	f_of_t="Linear",
+	period="racir_time",
+	repeat=False),
+AUTOENV("1",dir="Forward",time="0"),
+AUTOENV("1",start=True),
+[,var=''] [,mininc=''])
+LOOP(dur="racir_time",
 	units="Minutes",
-	steps=()
-		WAIT(dur="10",units="Seconds"),
-		LOG(),
+	mininc="log_interval",
+	steps=(
+	 [,flr='Default'] [flash='Default'])
+		LOG(avg="Off",
+			match="Off",
+			flr="0: Nothing"),
 	)
 ),
-LOG(close=0),
- ```
- 
-&lt;br /&gt;
-该方法一是一种最原始的方法，也就是重复第一次环境控制的程序，也就是复制第一次的 steps，只是将相应的的设置更改后设置更多的条件的测量。但这样的缺点是反复设置 LOOPs，要处理好缩进，在程序设置的时候可能因为缩进等问题，需要花更多的时间调试。那有没有一种出错少，时间少的方法呢？
+```
 ---
-class: animated, fadeIn
-# STEPs 的解释
-- 在日志显示信息
-  ```python
-  PROPERTIES(verbose="True",pause="False")
-  ```
+# 步骤详解
 
-- 在 logs 文件夹下的 zjd 文件夹打开一个 test 文件，不追加
-  ```python
-LOG(open="\"/home/licor/logs/zjd/test\"",app=False)
-  ```
-  
-- 控制二氧化碳浓度
-  ```python
-SETCONTROL("CO2_r","0","float")
-  ```
+本质上来讲，RACiR 的实现非常简单，因为我们有已经写好的 AUTOENV SETP，它的本质则为 AUTO Control 界面的所有功能。
 
----
-class: animated, fadeIn
-# 方法 1 的关键 STEP：
+我们所要做的只是设置好对应的功能即可，即：
 
+#### 1. 确定测量的二氧化碳浓度范围
 
-- 开始一个循环，时间持续 1 min 中，每 10 s 记录一个数据
-  ```python
-LOOP(
-dur="1", units="Minutes", steps=() WAIT(dur="10",units="Seconds"),LOG(),
-)
- ```
--  LOG 有关闭数据文件的功能
-  
-  - 尽管 BLUE &gt; 1.3.17 后 LI-6800 支持关机前关闭记录数据文件，但是在程序的最后自动关闭数据文件是一个良好的习惯
-    ```python
-LOG(close=0)
-    ```
----
-class: animated, fadeIn
-# 方法 2 STEPs 的解释
- 
- ```python
-PROPERTIES(verbose="True",pause="False"),
-LOG(open="\"/home/licor/logs/zjd/test\"",app=False),
-SETCONTROL("CO2_r","0","float"),
-CALL("AutoLog",
-	['1', '10']),
-SETCONTROL("CO2_r","300","float"),
-CALL("AutoLog",
-	['2', '30']),
-SETCONTROL("CO2_r","300","float"),
-CALL("AutoLog",
-	['', '10']),
-LOG(close=0),
- ```
+#### 2. 确定测量的方向
 
-- 该方法直接利用 DEFINEs 库的 AutoLog 来记录数据，避免了手动插入 LOOP。
+#### 3. 确定测量时长
 
-- 在 DEFINEs 库中的文件可以直接调用，无需放在一个 py 文件内。
-
-- 调用的方法是 CALL 语句。
+#### 4. 确定记录间隔
 ---
 class: animated, fadeIn, center, middle, inverse
 
-# .large[示例 1 的演示]
-
+# .large[示例6的演示]
 ---
 class: inverse, center, middle, animated, fadeIn
 
