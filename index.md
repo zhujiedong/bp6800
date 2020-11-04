@@ -23,3 +23,6 @@
 
 ## RACiR 测量
 [示例6](/bp-exam-6.html)
+
+## 荧光淬灭弛豫测量
+[示例7](/bp-exam-7.html)

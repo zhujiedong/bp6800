@@ -16,7 +16,7 @@
 class: center, middle, inverse, title-slide
 
 # 使用 BP 程序进行特定的光合测量的演示
-## RACiR 测量
+## 荧光淬灭弛豫测量
 ### 祝介东
 ### 北京力高泰科技有限公司 技术部
 ### 2020-11-04 修改
@@ -29,75 +29,33 @@ background-size: cover
 
 class: center, middle, animated, fadeIn
 
-# .large[RACiR 测量]
+# .large[荧光淬灭弛豫测量]
 ---
 class: animated, fadeIn
 
-# RACiR VS. ACi
+# 典型的荧光淬灭弛豫测量
 
-Laisk（1998）发现二氧化碳通过溶解而扩散到叶片内部后，即使外界二氧化碳浓度在低于 1 s 的时间内出现比较大的浓度变化，Rubisco 羧化速率能够达到一种表观稳定的状态。
- 
-相比于传统的稳态测量方法，RACiR 技术是一种动态测量叶片尺度的气体交换测量的方式，可以在更短的时间内获取基本的光合能力的测量参数。
-
-自 RACiR 技术的出现以来，已经有较多研究使用其作为计算 Vcmax 和 Jmax 的方法 （Pilon等2018; Lawrence, Stinziano, and Hanson 2019; Coursolle等2019），这意味着使用这两个参数作为重要评估指标或将其作为模型参数的领域 （例如 Keith等2013; Quebbeman and Ramirez 2016; Ali等2016; Rogers等2017） 均可使用 RACiR 技术。 对于部分参数与传统 ACi 曲线结果拟合的差异性 （Taylor 和 Long 2019），一方面二者本身一个为稳态光合测量，一个为动态光合测量，从实现手段上本就存在差异，另一方面是在技术操作层面上，需要按照操作规范进行，则可以避免不应出现的差异 （Stinziano等2018）。作为严肃的学术问题，这些差异不能简单的进行否定，仍需进一步探讨 （Stinziano等2018），并且也有研究表明，暗呼吸速率使用 RACiR 技术则更为准确 （Coursolle等2019）。Stinziano 等 （2019） 针对二者部分参数的差异性的原因进行了讨论，结果表明 RACiR 技术可能揭示更多常规 ACi 测量不能发现的光合属性，并对光合气体交换的扩散性限制和光呼吸速率的评估具有重要意义。
+&lt;img src="./img/typical.png" width="483" style="display: block; margin: auto;" /&gt;
+.tomato[Chlorophyll fluorescence analysis: a guide to good practice and understanding some new applications]
 ---
 class: animated, fadeIn
 
+# 需要速率常数的荧光淬灭弛豫测量
 
-# 示例6：RACiR 测量
+&lt;img src="./img/rate.png" width="1396" style="display: block; margin: auto;" /&gt;
 
-RACiR 测量是 LI-6800 功能上先进性的体现，为 ACi 测量提供了新的研究方向，使用常规方式可以进行 RACiR 测量，但因为要在两个菜单窗口内进行设定，有时不是很方便，但使用 BP 程序，则可以很好的解决这个问题。本例采用下面文章所采用的方法演示：
 
-&lt;img src="./img/conifer-racir.png" width="1131" /&gt;
-
+.tomato[A revised energy partitioning approach to assess the yields of non-photochemical quenching components]
 ---
 class: animated, fadeIn
 
 # 基本流程
 
-#### 1. 在 420 ppm 浓度下对叶片进行光诱导约 5 min（野外条件，稳定较快，不能一概而论），控制 `\(H_2OR\)` 为 22 mmol/mol，光照 1200 `\(\mu mol\)`。
+### 1. 暗适应足够长的时间，测量 `\(F_m\)`
 
-#### 2. 随后运行一个 AUTO CONTROL，使得二氧化碳浓度以 200 ppm/mins 的速度下降至 20 ppm，也就是进行一个 2 mins 的设置。
+### 2. 打开活化光，对其进行光诱导（恒定光强，或光强梯度），测量 `\(F_m^{'}\)`。
 
-#### 3. 再等待 10~15 s(稍等片刻，让二氧化碳浓度彻底达到起始值)，开始真正的 RACiR 测量，使用 20~1520 ppm 的二氧化碳浓度变化，变化速率为 100 ppm/min。
-
-.red.large.bold[注：使用 RACiR 测量，必须要控制 `\(CO_2R\)`, 而不同于普通的 ACi 测量，建议控制 `\(CO_2R\)`，但控制 `\(CO_2S\)` 并无问题。]
-
----
-class: animated, fadeIn
-
-# 关键步骤
-
-``` python
-
-AUTOENV("1",
-	target="CO2_r",
-	range=('start_co2', 'end_co2'),
-	f_of_t="Linear",
-	period="racir_time",
-	repeat=False),
-AUTOENV("1",dir="Forward",time="0"),
-AUTOENV("1",start=True),
-[,var=''] [,mininc=''])
-LOOP(dur="racir_time",
-	units="Minutes",
-	mininc="log_interval",
-	steps=(
-	 [,flr='Default'] [flash='Default'])
-		LOG(avg="Off",
-			match="Off",
-			flr="0: Nothing"),
-	)
-),
-```
----
-class: animated, fadeIn
-
-# 步骤详解
-
-本质上来讲，RACiR 的实现非常简单，因为我们有已经写好的 AUTOENV SETP，它的本质则为 AUTO Control 界面的所有功能。我们所要做的只是设置好对应的功能即可，即：确定测量的二氧化碳浓度范围，测量的方向，确定测量时长，确定记录间隔。
-
-&lt;img src="./img/autoenv.png" width="995" /&gt;
+### 3. 进行暗弛豫，以一定的时间间隔测量 `\(F_m^{''}\)`。
 
 ---
 class: animated, fadeIn, center, middle, inverse
